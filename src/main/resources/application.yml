@@ -1,0 +1,22 @@
+springdoc:
+  swagger-ui:
+    path: /openapi-ui
+  api-docs:
+    path: /api-docs-custom
+spring:
+  application:
+    name: postmortem-back
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://postmortem-db.mysql.database.azure.com:3306/sys?useSSL=true
+    username: fgriep
+    password: postmortem#123
+    hikari:
+      maxLifetime: 540
+      connection-test-query: "SELECT 1"
+
+logging:
+  level:
+    root: info
+    com.griep: debug
