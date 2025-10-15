@@ -33,13 +33,5 @@ logging:
             bind: trace
 
 jwt:
-  google:
+  Google:
     key: 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
-    expiresMinutes: 180
-  app:
-    secret: change-this-secret-in-prod
-    expMinutes: 120
-
-app:
-  cors:
-    allowed-origins: "*"
