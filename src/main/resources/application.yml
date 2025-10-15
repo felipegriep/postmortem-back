@@ -3,6 +3,9 @@ springdoc:
     path: /openapi-ui
   api-docs:
     path: /api-docs-custom
+
+server:
+  port: 8081
 spring:
   application:
     name: postmortem-back

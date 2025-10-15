@@ -1,10 +1,9 @@
 package com.griep.postmortem.api;
 
-import com.griep.postmortem.domain.dto.request.UserAcoountDTO;
+import com.griep.postmortem.domain.dto.request.UserAccountDTO;
 import com.griep.postmortem.domain.dto.response.UserAccountResponseDTO;
 import com.griep.postmortem.domain.enums.ProviderEnum;
 import com.griep.postmortem.service.IUserAccountService;
-import com.griep.postmortem.service.UserAccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -69,7 +68,7 @@ public class UserAccountController {
     })
     @PostMapping
     public ResponseEntity<Void> create(
-            @RequestBody @Valid @NotNull final UserAcoountDTO incident
+            @RequestBody @Valid @NotNull final UserAccountDTO incident
     ) {
 
         var id = service.create(incident);
@@ -91,7 +90,7 @@ public class UserAccountController {
     @PutMapping("/{id}")
     public ResponseEntity<UserAccountResponseDTO> update(
             @PathVariable("id") @Valid @Positive final Long id,
-            @RequestBody @NotNull @Valid final UserAcoountDTO userAccount
+            @RequestBody @NotNull @Valid final UserAccountDTO userAccount
     ) {
         return ok(service.update(id, userAccount));
     }

@@ -6,12 +6,14 @@ import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class UserAcoountDTO {
+public class UserAccountDTO {
     @Enumerated(EnumType.STRING)
     @NotNull
     private ProviderEnum provider;
@@ -28,4 +30,6 @@ public class UserAcoountDTO {
 
     @NotNull
     private Boolean active;
+
+    private LocalDateTime lastLoginAt;
 }

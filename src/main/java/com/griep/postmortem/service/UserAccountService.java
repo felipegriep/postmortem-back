@@ -1,6 +1,6 @@
 package com.griep.postmortem.service;
 
-import com.griep.postmortem.domain.dto.request.UserAcoountDTO;
+import com.griep.postmortem.domain.dto.request.UserAccountDTO;
 import com.griep.postmortem.domain.dto.response.UserAccountResponseDTO;
 import com.griep.postmortem.domain.model.UserAccount;
 import com.griep.postmortem.domain.util.UserAccountMapper;
@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 import static com.griep.postmortem.domain.util.UserAccountMapper.toDTO;
 import static com.griep.postmortem.domain.util.UserAccountMapper.toEntity;
@@ -33,22 +35,28 @@ public class UserAccountService implements IUserAccountService {
         return toDTO(getUserAccount(id));
     }
 
+    @Override
+    public Optional<UserAccountResponseDTO> get(String email, String externalId) {
+        return repository.findByEmailIgnoreCaseOrExternalIdEquals(email, externalId)
+                .map(UserAccountMapper::toDTO);
+    }
+
     private UserAccount getUserAccount(final Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User Account not found!"));
     }
 
     @Override
-    public Long create(final UserAcoountDTO userAccount) {
+    public UserAccountResponseDTO create(final UserAccountDTO userAccount) {
         var recorder = toEntity(new UserAccount(), userAccount);
 
         recorder = repository.saveAndFlush(recorder);
 
-        return recorder.getId();
+        return toDTO(recorder);
     }
 
     @Override
-    public UserAccountResponseDTO update(final Long id, final UserAcoountDTO userAccount) {
+    public UserAccountResponseDTO update(final Long id, final UserAccountDTO userAccount) {
         var recorder = this.getUserAccount(id);
 
         recorder = toEntity(recorder, userAccount);

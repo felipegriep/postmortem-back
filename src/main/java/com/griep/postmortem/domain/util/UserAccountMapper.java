@@ -1,6 +1,6 @@
 package com.griep.postmortem.domain.util;
 
-import com.griep.postmortem.domain.dto.request.UserAcoountDTO;
+import com.griep.postmortem.domain.dto.request.UserAccountDTO;
 import com.griep.postmortem.domain.dto.response.UserAccountResponseDTO;
 import com.griep.postmortem.domain.model.UserAccount;
 import org.modelmapper.ModelMapper;
@@ -17,7 +17,7 @@ public class UserAccountMapper {
         return mappeer.map(userAccount, UserAccountResponseDTO.class);
     }
 
-    public static UserAccount toEntity(final UserAccount userAccount, final UserAcoountDTO dto) {
+    public static UserAccount toEntity(final UserAccount userAccount, final UserAccountDTO dto) {
         return userAccount.toBuilder()
                 .provider(dto.getProvider())
                 .externalId(dto.getExternalId())
@@ -25,6 +25,7 @@ public class UserAccountMapper {
                 .name(dto.getName())
                 .pictureUrl(dto.getPictureUrl())
                 .active(dto.getActive())
+                .lastLoginAt(dto.getLastLoginAt())
                 .build();
     }
 }
