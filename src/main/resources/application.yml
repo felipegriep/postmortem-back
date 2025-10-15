@@ -7,9 +7,13 @@ spring:
   application:
     name: postmortem-back
 
+  jpa:
+    open-in-view: false
+    show-sql: true
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://postmortem-db.mysql.database.azure.com:3306/sys?useSSL=true
+    url: jdbc:mysql://postmortem-db.mysql.database.azure.com:3306/postmortem?useSSL=true
     username: fgriep
     password: postmortem#123
     hikari:
@@ -20,3 +24,14 @@ logging:
   level:
     root: info
     com.griep: debug
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    org:
+      hibernate:
+        orm:
+          jdbc:
+            bind: trace
+
+jwt:
+  Google:
+    key: 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
