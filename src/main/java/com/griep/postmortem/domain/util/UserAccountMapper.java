@@ -28,4 +28,8 @@ public class UserAccountMapper {
                 .lastLoginAt(dto.getLastLoginAt())
                 .build();
     }
+
+    public static UserAccountDTO fromResponse(final UserAccountResponseDTO response) {
+        return mappeer.map(response, UserAccountDTO.class);
+    }
 }

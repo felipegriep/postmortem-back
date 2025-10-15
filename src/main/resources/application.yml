@@ -36,5 +36,5 @@ logging:
             bind: trace
 
 jwt:
-  Google:
+  google:
     key: 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

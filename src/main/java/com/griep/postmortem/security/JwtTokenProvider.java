@@ -17,7 +17,7 @@ import java.util.Map;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${app.jwt.secret:change-this-default-secret-and-keep-it-long}")
+    @Value("${jwt.google.key}")
     private String secret;
 
     @Value("${app.jwt.expiration-minutes:120}")
