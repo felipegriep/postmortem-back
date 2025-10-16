@@ -7,6 +7,8 @@ import com.griep.postmortem.domain.util.UserAccountMapper;
 import com.griep.postmortem.infra.exception.NotFoundException;
 import com.griep.postmortem.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,23 @@ public class UserAccountService implements IUserAccountService {
                                              final String email,
                                              final Boolean active,
                                              final Pageable pageable) {
-        return repository.findAll(pageable).map(UserAccountMapper::toDTO);
+        return repository
+                .findAll(filter(name, email, active), pageable)
+                .map(UserAccountMapper::toDTO);
+    }
+
+    private Example<UserAccount> filter(final String name, final String email, final Boolean active) {
+        return Example.of(UserAccount.builder()
+                        .name(name)
+                        .email(email)
+                        .active(active)
+                        .build(),
+                ExampleMatcher.matching()
+                        .withIgnoreCase()
+                        .withMatcher("name",
+                                ExampleMatcher.GenericPropertyMatchers
+                                        .contains())
+        );
     }
 
     @Override

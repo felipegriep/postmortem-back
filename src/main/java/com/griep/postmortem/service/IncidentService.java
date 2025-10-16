@@ -10,6 +10,8 @@ import com.griep.postmortem.infra.exception.NotFoundException;
 import com.griep.postmortem.repository.IncidentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,7 +32,21 @@ public class IncidentService implements IIncidentService {
                                           final StatusEnum status,
                                           final Pageable pageable) {
 
-        return repository.findAll(pageable).map(IncidentMapper::toDTO);
+        return repository.findAll(filter(service, severity, status), pageable).map(IncidentMapper::toDTO);
+    }
+
+    private Example<Incident> filter(final String service, final SeverityEnum severity, final StatusEnum status) {
+        return Example.of(Incident.builder()
+                        .service(service)
+                        .severity(severity)
+                        .status(status)
+                        .build(),
+                ExampleMatcher.matching()
+                        .withIgnoreCase()
+                        .withMatcher("service",
+                                ExampleMatcher.GenericPropertyMatchers
+                                        .contains())
+        );
     }
 
     @Override
