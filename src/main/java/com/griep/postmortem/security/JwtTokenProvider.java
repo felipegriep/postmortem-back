@@ -20,7 +20,7 @@ public class JwtTokenProvider {
     @Value("${jwt.google.key}")
     private String secret;
 
-    @Value("${app.jwt.expiration-minutes:120}")
+    @Value("${jwt.google.expiration:120}")
     private long expirationMinutes;
 
     private SecretKey key;

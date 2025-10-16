@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Arrays.stream;
+import static org.springframework.data.domain.Pageable.ofSize;
 import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
@@ -45,9 +46,10 @@ public class IncidentController {
             @RequestParam(name = "serviceName", required = false) final String serviceName,
             @RequestParam(name = "severity", required = false) final SeverityEnum severity,
             @RequestParam(name = "status", required = false) final StatusEnum status,
-            @RequestParam(name = "pageable", required = false, defaultValue = "0") final Pageable pageable
-    ) {
-        return ok(service.list(serviceName, severity, status, pageable));
+            @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+            @RequestParam(name = "size", required = false, defaultValue = "10") final Integer size
+            ) {
+        return ok(service.list(serviceName, severity, status, ofSize(size).withPage(page)));
     }
 
     @Operation(summary = "Get a Incident", description = "Returns a simple incident")
