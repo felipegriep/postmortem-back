@@ -11,13 +11,15 @@ import com.griep.postmortem.repository.IncidentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import static com.griep.postmortem.domain.util.IncidentMapper.toDTO;
+import static com.griep.postmortem.domain.util.IncidentMapper.toDTOWithMttaAndMttr;
 import static com.griep.postmortem.domain.util.IncidentMapper.toEntity;
+import static org.springframework.data.domain.Example.of;
+import static org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.contains;
+import static org.springframework.data.domain.ExampleMatcher.matching;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ import static com.griep.postmortem.domain.util.IncidentMapper.toEntity;
 public class IncidentService implements IIncidentService {
 
     private final IncidentRepository repository;
+    private final IIncidentEventService eventService;
 
     @Override
     public Page<IncidentResponseDTO> list(final String service,
@@ -32,27 +35,30 @@ public class IncidentService implements IIncidentService {
                                           final StatusEnum status,
                                           final Pageable pageable) {
 
-        return repository.findAll(filter(service, severity, status), pageable).map(IncidentMapper::toDTO);
+        return repository.findAll(filter(service, severity, status), pageable)
+                .map(incident ->
+                        IncidentMapper.toDTOWithMttaAndMttr(incident, eventService
+                                .calculateMtta(incident.getId(), incident.getStartedAt())));
     }
 
     private Example<Incident> filter(final String service, final SeverityEnum severity, final StatusEnum status) {
-        return Example.of(Incident.builder()
+        return of(Incident.builder()
                         .service(service)
                         .severity(severity)
                         .status(status)
                         .build(),
-                ExampleMatcher.matching()
+                matching()
                         .withIgnoreCase()
-                        .withMatcher("service",
-                                ExampleMatcher.GenericPropertyMatchers
-                                        .contains())
+                        .withMatcher("service", contains())
         );
     }
 
     @Override
     public IncidentResponseDTO get(final Long id) {
+        var incident = getIncident(id);
         return IncidentMapper
-                .toDTO(getIncident(id));
+                .toDTOWithMttaAndMttr(incident, eventService
+                        .calculateMtta(id, incident.getStartedAt()));
     }
 
     private Incident getIncident(Long id) {
@@ -75,7 +81,9 @@ public class IncidentService implements IIncidentService {
 
         recorder = toEntity(recorder, incident);
 
-        return toDTO(repository.saveAndFlush(recorder));
+        recorder = repository.saveAndFlush(recorder);
+
+        return toDTOWithMttaAndMttr(recorder, eventService.calculateMtta(id, recorder.getStartedAt()));
     }
 
     @Override

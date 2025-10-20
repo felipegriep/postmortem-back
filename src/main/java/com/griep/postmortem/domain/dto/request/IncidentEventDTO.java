@@ -1,7 +1,8 @@
 package com.griep.postmortem.domain.dto.request;
 
 import com.griep.postmortem.domain.enums.EventTypeEnum;
-import jakarta.persistence.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 

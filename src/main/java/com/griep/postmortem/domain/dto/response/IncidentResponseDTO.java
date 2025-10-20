@@ -8,11 +8,13 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import static java.time.Duration.between;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class IncidentResponseDTO {
 
     private Long id;
@@ -31,4 +33,16 @@ public class IncidentResponseDTO {
     private UserAccountResponseDTO reporter;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer mttaMinutes;
+    private Integer mttrMinutes;
+
+    public IncidentResponseDTO calculateMttr() {
+        if (this.startedAt == null || this.endedAt == null) {
+            return this;
+        }
+
+        var minutes = between(this.startedAt, this.endedAt).toMinutes();
+        this.mttrMinutes = minutes >= 0 ? (int) minutes : null;
+        return this;
+    }
 }

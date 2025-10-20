@@ -13,8 +13,11 @@ public class IncidentMapper {
         mappeer = new ModelMapper();
     }
 
-    public static IncidentResponseDTO toDTO(final Incident incident) {
-        return mappeer.map(incident, IncidentResponseDTO.class);
+    public static IncidentResponseDTO toDTOWithMttaAndMttr(final Incident incident, final Integer mttaMinutes) {
+        return mappeer.map(incident, IncidentResponseDTO.class).toBuilder()
+                .mttaMinutes(mttaMinutes)
+                .build()
+                .calculateMttr();
     }
 
     public static Incident toEntity(final Incident incident, final IncidentDTO dto) {

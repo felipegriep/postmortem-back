@@ -2,7 +2,6 @@ package com.griep.postmortem.domain.model;
 
 import com.griep.postmortem.domain.enums.SeverityEnum;
 import com.griep.postmortem.domain.enums.StatusEnum;
-import com.griep.postmortem.domain.util.SeverityEnumConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

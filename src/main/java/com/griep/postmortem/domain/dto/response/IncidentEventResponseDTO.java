@@ -1,12 +1,9 @@
 package com.griep.postmortem.domain.dto.response;
 
 import com.griep.postmortem.domain.enums.EventTypeEnum;
-import com.griep.postmortem.domain.model.Incident;
-import com.griep.postmortem.domain.model.UserAccount;
-import jakarta.persistence.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
