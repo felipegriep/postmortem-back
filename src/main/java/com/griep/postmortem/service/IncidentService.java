@@ -27,7 +27,7 @@ import static org.springframework.data.domain.ExampleMatcher.matching;
 public class IncidentService implements IIncidentService {
 
     private final IncidentRepository repository;
-    private final IIncidentEventService eventService;
+    private final IIncidentMetricsService metricsService;
 
     @Override
     public Page<IncidentResponseDTO> list(final String service,
@@ -37,7 +37,7 @@ public class IncidentService implements IIncidentService {
 
         return repository.findAll(filter(service, severity, status), pageable)
                 .map(incident ->
-                        IncidentMapper.toDTOWithMttaAndMttr(incident, eventService
+                        IncidentMapper.toDTOWithMttaAndMttr(incident, metricsService
                                 .calculateMtta(incident.getId(), incident.getStartedAt())));
     }
 
@@ -55,13 +55,14 @@ public class IncidentService implements IIncidentService {
 
     @Override
     public IncidentResponseDTO get(final Long id) {
-        var incident = getIncident(id);
+        var incident = getEntity(id);
         return IncidentMapper
-                .toDTOWithMttaAndMttr(incident, eventService
+                .toDTOWithMttaAndMttr(incident, metricsService
                         .calculateMtta(id, incident.getStartedAt()));
     }
 
-    private Incident getIncident(Long id) {
+    @Override
+    public Incident getEntity(final Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Incident not found!"));
     }
@@ -77,18 +78,18 @@ public class IncidentService implements IIncidentService {
 
     @Override
     public IncidentResponseDTO update(final Long id, final IncidentDTO incident) {
-        var recorder = this.getIncident(id);
+        var recorder = this.getEntity(id);
 
         recorder = toEntity(recorder, incident);
 
         recorder = repository.saveAndFlush(recorder);
 
-        return toDTOWithMttaAndMttr(recorder, eventService.calculateMtta(id, recorder.getStartedAt()));
+        return toDTOWithMttaAndMttr(recorder, metricsService.calculateMtta(id, recorder.getStartedAt()));
     }
 
     @Override
     public void delete(final Long id) {
-        var incident = this.getIncident(id);
+        var incident = this.getEntity(id);
 
         repository.delete(incident);
     }

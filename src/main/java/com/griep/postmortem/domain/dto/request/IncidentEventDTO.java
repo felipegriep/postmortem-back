@@ -1,5 +1,6 @@
 package com.griep.postmortem.domain.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.griep.postmortem.domain.enums.EventTypeEnum;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 public class IncidentEventDTO {
 
     @NotNull
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventAt;
 
     @Enumerated(EnumType.STRING)

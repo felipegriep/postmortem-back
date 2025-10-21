@@ -22,6 +22,7 @@ import java.util.List;
 
 import static java.util.Arrays.stream;
 import static org.springframework.data.domain.Pageable.ofSize;
+import static org.springframework.http.ResponseEntity.noContent;
 import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
@@ -97,9 +98,9 @@ public class IncidentController {
         return ok(service.update(id, incident));
     }
 
-    @Operation(summary = "Update a Incident", description = "Update a simple incident")
+    @Operation(summary = "Delete a Incident", description = "Delete a simple incident")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "204", description = "Successful operation"),
             @ApiResponse(responseCode = "400", description = "Invalid request"),
             @ApiResponse(responseCode = "404", description = "Not found")
     })
@@ -108,7 +109,7 @@ public class IncidentController {
             @PathVariable("id") @Valid @Positive final Long id
     ) {
         service.delete(id);
-        return ok().build();
+        return noContent().build();
     }
 
     @Operation(summary = "List Severities", description = "List all severities")
