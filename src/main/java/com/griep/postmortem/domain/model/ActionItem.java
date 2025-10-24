@@ -35,7 +35,7 @@ public class ActionItem {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "TYPE", nullable = false, length = 10)
-    private ActionTypeEnum type;
+    private ActionTypeEnum actionType;
 
     @Lob
     @Column(name = "DESCRIPTION", nullable = false, columnDefinition = "TEXT")

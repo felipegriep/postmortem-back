@@ -35,6 +35,7 @@ public class IncidentResponseDTO {
     private LocalDateTime updatedAt;
     private Integer mttaMinutes;
     private Integer mttrMinutes;
+    private Integer completenessScore;
 
     public IncidentResponseDTO calculateMttr() {
         if (this.startedAt == null || this.endedAt == null) {

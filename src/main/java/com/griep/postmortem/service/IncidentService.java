@@ -5,7 +5,6 @@ import com.griep.postmortem.domain.dto.response.IncidentResponseDTO;
 import com.griep.postmortem.domain.enums.SeverityEnum;
 import com.griep.postmortem.domain.enums.StatusEnum;
 import com.griep.postmortem.domain.model.Incident;
-import com.griep.postmortem.domain.util.IncidentMapper;
 import com.griep.postmortem.infra.exception.NotFoundException;
 import com.griep.postmortem.repository.IncidentRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import static com.griep.postmortem.domain.util.IncidentMapper.toDTOWithMttaAndMttr;
+import static com.griep.postmortem.domain.util.IncidentMapper.toDTOWithMttaAndMttrAndScore;
 import static com.griep.postmortem.domain.util.IncidentMapper.toEntity;
 import static org.springframework.data.domain.Example.of;
 import static org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.contains;
@@ -28,6 +27,7 @@ public class IncidentService implements IIncidentService {
 
     private final IncidentRepository repository;
     private final IIncidentMetricsService metricsService;
+    private final IScoreService scoreService;
 
     @Override
     public Page<IncidentResponseDTO> list(final String service,
@@ -37,8 +37,9 @@ public class IncidentService implements IIncidentService {
 
         return repository.findAll(filter(service, severity, status), pageable)
                 .map(incident ->
-                        IncidentMapper.toDTOWithMttaAndMttr(incident, metricsService
-                                .calculateMtta(incident.getId(), incident.getStartedAt())));
+                        toDTOWithMttaAndMttrAndScore(incident, metricsService
+                                .calculateMtta(incident.getId(), incident.getStartedAt()),
+                                scoreService.compute(incident).score()));
     }
 
     private Example<Incident> filter(final String service, final SeverityEnum severity, final StatusEnum status) {
@@ -56,9 +57,9 @@ public class IncidentService implements IIncidentService {
     @Override
     public IncidentResponseDTO get(final Long id) {
         var incident = getEntity(id);
-        return IncidentMapper
-                .toDTOWithMttaAndMttr(incident, metricsService
-                        .calculateMtta(id, incident.getStartedAt()));
+        return toDTOWithMttaAndMttrAndScore(incident, metricsService
+                        .calculateMtta(id, incident.getStartedAt()),
+                scoreService.compute(incident).score());
     }
 
     @Override
@@ -84,7 +85,10 @@ public class IncidentService implements IIncidentService {
 
         recorder = repository.saveAndFlush(recorder);
 
-        return toDTOWithMttaAndMttr(recorder, metricsService.calculateMtta(id, recorder.getStartedAt()));
+        return toDTOWithMttaAndMttrAndScore(
+                recorder,
+                metricsService.calculateMtta(id, recorder.getStartedAt()),
+                scoreService.compute(recorder).score());
     }
 
     @Override

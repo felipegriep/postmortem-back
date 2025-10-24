@@ -1,5 +1,6 @@
 package com.griep.postmortem.repository;
 
+import com.griep.postmortem.domain.enums.EventTypeEnum;
 import com.griep.postmortem.domain.model.IncidentEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,8 @@ public interface IncidentEventRepository extends JpaRepository<IncidentEvent, Lo
 
     List<IncidentEvent> findByIncidentIdOrderByEventAtAsc(final Long incidentId);
     Optional<IncidentEvent> findByIdAndIncidentId(final Long id, final Long incidentId);
+
+    long countByIncidentId(final Long incidentId);
+    boolean existsByIncidentIdAndType(final Long incidentId, final EventTypeEnum eventType);
+
 }

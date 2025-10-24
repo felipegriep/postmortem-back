@@ -13,9 +13,10 @@ public class IncidentMapper {
         mappeer = new ModelMapper();
     }
 
-    public static IncidentResponseDTO toDTOWithMttaAndMttr(final Incident incident, final Integer mttaMinutes) {
+    public static IncidentResponseDTO toDTOWithMttaAndMttrAndScore(final Incident incident, final Integer mttaMinutes, final Integer score) {
         return mappeer.map(incident, IncidentResponseDTO.class).toBuilder()
                 .mttaMinutes(mttaMinutes)
+                .completenessScore(score)
                 .build()
                 .calculateMttr();
     }
