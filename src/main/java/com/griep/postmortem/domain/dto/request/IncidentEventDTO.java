@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class IncidentEventDTO {
 
     @NotNull
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime eventAt;
 
     @Enumerated(EnumType.STRING)

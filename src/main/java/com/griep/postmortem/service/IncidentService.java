@@ -35,11 +35,14 @@ public class IncidentService implements IIncidentService {
                                           final StatusEnum status,
                                           final Pageable pageable) {
 
-        return repository.findAll(filter(service, severity, status), pageable)
-                .map(incident ->
-                        toDTOWithMttaAndMttrAndScore(incident, metricsService
-                                .calculateMtta(incident.getId(), incident.getStartedAt()),
-                                scoreService.compute(incident).score()));
+        var page = repository.findAll(filter(service, severity, status), pageable);
+        return page.map(incident ->
+                toDTOWithMttaAndMttrAndScore(
+                        incident,
+                        metricsService.calculateMtta(incident.getId(), incident.getStartedAt()),
+                        scoreService.compute(incident).score()
+                )
+        );
     }
 
     private Example<Incident> filter(final String service, final SeverityEnum severity, final StatusEnum status) {

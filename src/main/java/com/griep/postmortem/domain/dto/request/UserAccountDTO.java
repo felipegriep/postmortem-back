@@ -1,5 +1,6 @@
 package com.griep.postmortem.domain.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.griep.postmortem.domain.enums.ProviderEnum;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -31,5 +32,6 @@ public class UserAccountDTO {
     @NotNull
     private Boolean active;
 
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime lastLoginAt;
 }

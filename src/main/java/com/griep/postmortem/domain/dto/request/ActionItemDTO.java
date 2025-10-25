@@ -1,5 +1,6 @@
 package com.griep.postmortem.domain.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.griep.postmortem.domain.enums.ActionStatusEnum;
 import com.griep.postmortem.domain.enums.ActionTypeEnum;
 import jakarta.persistence.EnumType;
@@ -24,6 +25,7 @@ public class ActionItemDTO {
     @NotNull
     private String description;
 
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDate dueDate;
 
     @Enumerated(EnumType.STRING)

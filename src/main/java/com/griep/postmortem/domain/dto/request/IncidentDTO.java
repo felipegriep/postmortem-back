@@ -1,5 +1,6 @@
 package com.griep.postmortem.domain.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.griep.postmortem.domain.enums.SeverityEnum;
 import com.griep.postmortem.domain.enums.StatusEnum;
 import jakarta.persistence.EnumType;
@@ -31,8 +32,10 @@ public class IncidentDTO {
     private StatusEnum status;
 
     @NotNull
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime startedAt;
 
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime endedAt;
 
     private String impactShort;
