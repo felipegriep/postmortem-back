@@ -1,5 +1,6 @@
 package com.griep.postmortem.domain.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,10 @@ public class RootCauseResponseDTO {
     private String rootCauseText;
     private String contributingFactors;
     private String lessonsLearned;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime updatedAt;
 }
