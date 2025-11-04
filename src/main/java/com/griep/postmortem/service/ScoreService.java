@@ -19,10 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-import static com.griep.postmortem.Constants.*;
 import static com.griep.postmortem.domain.enums.ActionTypeEnum.CORRECTIVE;
 import static com.griep.postmortem.domain.enums.ActionTypeEnum.PREVENTIVE;
 import static com.griep.postmortem.domain.enums.EventTypeEnum.COMMUNICATION;
+import static com.griep.postmortem.service.util.Constants.*;
 
 @Service
 @RequiredArgsConstructor

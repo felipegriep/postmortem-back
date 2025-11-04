@@ -7,8 +7,10 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import static com.griep.postmortem.domain.enums.ActionStatusEnum.DONE;
+import static java.time.LocalDateTime.now;
 
 @Getter
 @Setter
@@ -25,7 +27,9 @@ public class ActionItemResponseDTO {
 
     private String description;
     private UserAccountResponseDTO owner;
-    private LocalDate dueDate;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
+    private LocalDateTime dueDate;
 
     @Enumerated(EnumType.STRING)
     private ActionStatusEnum status;
@@ -34,6 +38,30 @@ public class ActionItemResponseDTO {
 
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime completedAt;
+
+    private SlaDTO sla;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
     private LocalDateTime updatedAt;
+
+    public ActionItemResponseDTO makeSla() {
+        var overdue = now().isAfter(dueDate) &&
+                !DONE.equals(this.status);
+        Boolean finishedOnTime =
+                DONE.equals(this.status) &&
+                this.completedAt != null &&
+                        !this.completedAt.isAfter(dueDate) ?
+                        true :
+                        null;
+
+        this.setSla(SlaDTO.builder()
+                .overdue(overdue)
+                .finishedOnTime(finishedOnTime)
+                .build());
+
+        return this;
+    }
 }

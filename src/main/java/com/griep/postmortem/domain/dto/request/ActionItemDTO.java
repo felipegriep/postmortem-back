@@ -6,33 +6,13 @@ import com.griep.postmortem.domain.enums.ActionTypeEnum;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ActionItemDTO {
-
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private ActionTypeEnum type;
-
-    @NotNull
-    private String description;
-
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo")
-    private LocalDate dueDate;
-
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private ActionStatusEnum status;
-
-    private String evidenceLink;
-
-    private LocalDateTime completedAt;
+public record ActionItemDTO(
+        @Enumerated(EnumType.STRING) @NotNull ActionTypeEnum type,
+        @NotNull String description,
+        @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo") LocalDateTime dueDate,
+        @Enumerated(EnumType.STRING) @NotNull ActionStatusEnum status,
+        String evidenceLink) {
 }
