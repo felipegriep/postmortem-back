@@ -4,6 +4,7 @@ import com.griep.postmortem.domain.dto.request.ActionItemDTO;
 import com.griep.postmortem.domain.dto.response.ActionItemResponseDTO;
 import com.griep.postmortem.domain.model.ActionItem;
 import com.griep.postmortem.domain.model.Incident;
+import com.griep.postmortem.domain.model.UserAccount;
 import org.modelmapper.ModelMapper;
 
 import static com.griep.postmortem.domain.enums.ActionStatusEnum.DONE;
@@ -23,7 +24,8 @@ public class ActionItemMapper {
 
     public static ActionItem toEntity(final Incident incident,
                                       final ActionItem actionItem,
-                                      final ActionItemDTO dto) {
+                                      final ActionItemDTO dto,
+                                      final UserAccount userAccount) {
         return actionItem.toBuilder()
                 .incident(incident)
                 .actionType(dto.type())
@@ -32,6 +34,7 @@ public class ActionItemMapper {
                 .status(dto.status())
                 .evidenceLink(dto.evidenceLink())
                 .completedAt(DONE.equals(dto.status()) ? now() : null)
+                .owner(userAccount)
                 .build();
     }
 }

@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,9 +67,10 @@ public class ActionItemController {
     @PostMapping
     public ResponseEntity<Void> create(
             @PathVariable("incidentId") @Valid @NotNull @Positive final Long incidentId,
-            @Valid @RequestBody @NotNull final ActionItemDTO actionItem
+            @Valid @RequestBody @NotNull final ActionItemDTO actionItem,
+            @AuthenticationPrincipal final String userEmail
     ) {
-        service.create(incidentId, actionItem);
+        service.create(incidentId, actionItem, userEmail);
 
         return status(CREATED).build();
     }
@@ -84,9 +86,10 @@ public class ActionItemController {
     public ResponseEntity<ActionItemResponseDTO> update(
             @PathVariable("incidentId") @Valid @NotNull @Positive final Long incidentId,
             @PathVariable("id") @Valid @NotNull @Positive final Long id,
-            @Valid @RequestBody @NotNull final ActionItemDTO actionItem
+            @Valid @RequestBody @NotNull final ActionItemDTO actionItem,
+            @AuthenticationPrincipal final String userEmail
     ) {
-        return ok(service.update(incidentId, id, actionItem));
+        return ok(service.update(incidentId, id, actionItem, userEmail));
     }
 
     @Operation(summary = "Delete a Action Item of Incident", description = "Delete a simple action item of incident")

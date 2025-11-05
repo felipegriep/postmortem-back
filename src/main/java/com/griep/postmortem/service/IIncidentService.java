@@ -12,7 +12,7 @@ public interface IIncidentService {
     Page<IncidentResponseDTO> list(final String service, final SeverityEnum severity, final StatusEnum status, final Pageable pageable);
     IncidentResponseDTO get(final Long id);
     Incident getEntity(final Long id);
-    Long create(final IncidentDTO incident);
-    IncidentResponseDTO update(final Long id, final IncidentDTO incident);
+    Long create(final IncidentDTO incident, final String userEmail);
+    IncidentResponseDTO update(final Long id, final IncidentDTO incident, final String userEmail);
     void delete(final Long id);
 }

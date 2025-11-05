@@ -31,12 +31,22 @@ public class UserAccountController {
 
     private final IUserAccountService service;
 
-    @Operation(summary = "List of Users", description = "Returns a list, or filtered list, of users account")
+    @Operation(summary = "List of Users", description = "Returns a list of users account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful operation"),
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
     @GetMapping
+    public ResponseEntity<List<UserAccountResponseDTO>> list() {
+        return ok(service.list());
+    }
+
+    @Operation(summary = "List of Users", description = "Returns a list, or filtered list, of users account")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    @GetMapping("/filter")
     public ResponseEntity<Page<UserAccountResponseDTO>> list(
             @RequestParam(name = "name", required = false) final String name,
             @RequestParam(name = "email", required = false) final String email,

@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface IIncidentEventService {
     List<IncidentEventResponseDTO> list(final Long incidentId);
-    void create(final Long incidentId, final IncidentEventDTO incidentEvent);
-    IncidentEventResponseDTO update(final Long incidentId, final Long id, final IncidentEventDTO incidentEvent);
+    void create(final Long incidentId, final IncidentEventDTO incidentEvent, final String userEmail);
+    IncidentEventResponseDTO update(final Long incidentId, final Long id, final IncidentEventDTO incidentEvent, final String userEmail);
     void delete(final Long incidentId, final Long id);
 }

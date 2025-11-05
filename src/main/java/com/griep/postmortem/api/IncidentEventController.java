@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,10 +48,11 @@ public class IncidentEventController {
     @PostMapping("/{incidentId}/events")
     public ResponseEntity<Void> create(
             @PathVariable("incidentId") @Valid @NotNull @Positive final Long incidentId,
-            @RequestBody @Valid @NotNull final IncidentEventDTO incidentEvent
+            @RequestBody @Valid @NotNull final IncidentEventDTO incidentEvent,
+            @AuthenticationPrincipal final String userEmail
     ) {
 
-        service.create(incidentId, incidentEvent);
+        service.create(incidentId, incidentEvent, userEmail);
 
         return status(CREATED).build();
     }
@@ -66,9 +68,10 @@ public class IncidentEventController {
     public ResponseEntity<IncidentEventResponseDTO> update(
             @PathVariable("incidentId") @Valid @NotNull @Positive final Long incidentId,
             @PathVariable("id") @Valid @Positive final Long id,
-            @RequestBody @NotNull @Valid final IncidentEventDTO incidentEvent
+            @RequestBody @NotNull @Valid final IncidentEventDTO incidentEvent,
+            @AuthenticationPrincipal final String userEmail
     ) {
-        return ok(service.update(incidentId, id, incidentEvent));
+        return ok(service.update(incidentId, id, incidentEvent, userEmail));
     }
 
     @Operation(summary = "Delete a Event of Incident", description = "Delete a simple event of incident")

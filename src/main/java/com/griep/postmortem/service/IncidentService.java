@@ -13,6 +13,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.griep.postmortem.domain.util.IncidentMapper.toDTOWithMttaAndMttrAndScore;
 import static com.griep.postmortem.domain.util.IncidentMapper.toEntity;
@@ -28,8 +29,10 @@ public class IncidentService implements IIncidentService {
     private final IncidentRepository repository;
     private final IIncidentMetricsService metricsService;
     private final IScoreService scoreService;
+    private final IUserAccountService userAccountService;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<IncidentResponseDTO> list(final String service,
                                           final SeverityEnum severity,
                                           final StatusEnum status,
@@ -58,6 +61,7 @@ public class IncidentService implements IIncidentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public IncidentResponseDTO get(final Long id) {
         var incident = getEntity(id);
         return toDTOWithMttaAndMttrAndScore(incident, metricsService
@@ -72,8 +76,10 @@ public class IncidentService implements IIncidentService {
     }
 
     @Override
-    public Long create(final IncidentDTO incident) {
-        var recorder = toEntity(new Incident(), incident);
+    @Transactional
+    public Long create(final IncidentDTO incident, final String userEmail) {
+        var userAccount = userAccountService.getUserAccount(userEmail);
+        var recorder = toEntity(new Incident(), incident, userAccount);
 
         recorder = repository.saveAndFlush(recorder);
 
@@ -81,10 +87,12 @@ public class IncidentService implements IIncidentService {
     }
 
     @Override
-    public IncidentResponseDTO update(final Long id, final IncidentDTO incident) {
+    @Transactional
+    public IncidentResponseDTO update(final Long id, final IncidentDTO incident, String userEmail) {
         var recorder = this.getEntity(id);
+        var userAccount = userAccountService.getUserAccount(userEmail);
 
-        recorder = toEntity(recorder, incident);
+        recorder = toEntity(recorder, incident, userAccount);
 
         recorder = repository.saveAndFlush(recorder);
 
@@ -95,6 +103,7 @@ public class IncidentService implements IIncidentService {
     }
 
     @Override
+    @Transactional
     public void delete(final Long id) {
         var incident = this.getEntity(id);
 

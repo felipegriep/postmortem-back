@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.griep.postmortem.domain.util.UserAccountMapper.toDTO;
@@ -23,6 +24,14 @@ import static com.griep.postmortem.domain.util.UserAccountMapper.toEntity;
 public class UserAccountService implements IUserAccountService {
 
     private final UserAccountRepository repository;
+
+    @Override
+    public List<UserAccountResponseDTO> list() {
+        return repository.findAllByOrderByNameAsc()
+                .stream()
+                .map(UserAccountMapper::toDTO)
+                .toList();
+    }
 
     @Override
     public Page<UserAccountResponseDTO> list(final String name,
@@ -59,9 +68,16 @@ public class UserAccountService implements IUserAccountService {
                 .map(UserAccountMapper::toDTO);
     }
 
-    private UserAccount getUserAccount(final Long id) {
+    @Override
+    public UserAccount getUserAccount(final Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User Account not found!"));
+    }
+
+    @Override
+    public UserAccount getUserAccount(final String email) {
+        return repository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new NotFoundException("User Account %s not found!".formatted(email)));
     }
 
     @Override

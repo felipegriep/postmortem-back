@@ -8,6 +8,7 @@ import com.griep.postmortem.infra.exception.NotFoundException;
 import com.griep.postmortem.repository.IncidentEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,8 +20,10 @@ import static com.griep.postmortem.domain.util.IncidentEventMapper.toEntity;
 public class IncidentEventService implements IIncidentEventService {
     private final IncidentEventRepository repository;
     private final IIncidentService incidentService;
+    private final IUserAccountService userAccountService;
 
     @Override
+    @Transactional(readOnly = true)
     public List<IncidentEventResponseDTO> list(final Long incidentId) {
         return repository.findByIncidentIdOrderByEventAtAsc(incidentId)
                 .stream()
@@ -28,20 +31,27 @@ public class IncidentEventService implements IIncidentEventService {
     }
 
     @Override
-    public void create(final Long incidentId, final IncidentEventDTO incidentEvent) {
+    @Transactional
+    public void create(final Long incidentId, final IncidentEventDTO incidentEvent, final String userEmail) {
         var incident = incidentService.getEntity(incidentId);
+        var userAccount = userAccountService.getUserAccount(userEmail);
 
-        var recorder = toEntity(incident, new IncidentEvent(), incidentEvent);
+        var recorder = toEntity(incident, new IncidentEvent(), incidentEvent, userAccount);
 
         repository.saveAndFlush(recorder);
     }
 
     @Override
-    public IncidentEventResponseDTO update(final Long incidentId, final Long id, final IncidentEventDTO incidentEvent) {
+    @Transactional
+    public IncidentEventResponseDTO update(final Long incidentId,
+                                           final Long id,
+                                           final IncidentEventDTO incidentEvent,
+                                           final String userEmail) {
         var incident = incidentService.getEntity(incidentId);
         var recorder = this.get(id, incidentId);
+        var userAccount = userAccountService.getUserAccount(userEmail);
 
-        recorder = toEntity(incident, recorder, incidentEvent);
+        recorder = toEntity(incident, recorder, incidentEvent, userAccount);
 
         recorder = repository.saveAndFlush(recorder);
 
@@ -54,6 +64,7 @@ public class IncidentEventService implements IIncidentEventService {
     }
 
     @Override
+    @Transactional
     public void delete(final Long incidentId, final Long id) {
         var recorder = this.get(id, incidentId);
 

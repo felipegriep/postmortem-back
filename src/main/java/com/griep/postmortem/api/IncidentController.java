@@ -4,7 +4,7 @@ import com.griep.postmortem.domain.dto.request.IncidentDTO;
 import com.griep.postmortem.domain.dto.response.IncidentResponseDTO;
 import com.griep.postmortem.domain.enums.SeverityEnum;
 import com.griep.postmortem.domain.enums.StatusEnum;
-import com.griep.postmortem.service.IncidentService;
+import com.griep.postmortem.service.IIncidentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -33,7 +34,7 @@ import static org.springframework.http.ResponseEntity.ok;
 @RequiredArgsConstructor
 public class IncidentController {
 
-    private final IncidentService service;
+    private final IIncidentService service;
 
     @Operation(summary = "List of Incidents", description = "Returns a list, or filtered list, of incidents")
     @ApiResponses(value = {
@@ -75,10 +76,11 @@ public class IncidentController {
     })
     @PostMapping
     public ResponseEntity<Void> create(
-            @RequestBody @Valid @NotNull final IncidentDTO incident
+            @RequestBody @Valid @NotNull final IncidentDTO incident,
+            @AuthenticationPrincipal final String userEmail
     ) {
 
-        var id = service.create(incident);
+        var id = service.create(incident, userEmail);
         var location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
                 .buildAndExpand(id)
@@ -97,9 +99,10 @@ public class IncidentController {
     @PutMapping("/{id}")
     public ResponseEntity<IncidentResponseDTO> update(
             @PathVariable("id") @Valid @Positive final Long id,
-            @RequestBody @NotNull @Valid final IncidentDTO incident
+            @RequestBody @NotNull @Valid final IncidentDTO incident,
+            @AuthenticationPrincipal final String userEmail
     ) {
-        return ok(service.update(id, incident));
+        return ok(service.update(id, incident, userEmail));
     }
 
     @Operation(summary = "Delete a Incident", description = "Delete a simple incident")

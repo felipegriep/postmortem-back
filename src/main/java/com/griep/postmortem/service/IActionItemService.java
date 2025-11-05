@@ -15,7 +15,7 @@ public interface IActionItemService {
                                      final Boolean isOverdue,
                                      final String query,
                                      final Pageable pageable);
-    void create(final Long incidentId, final ActionItemDTO actionItem);
-    ActionItemResponseDTO update(final Long incidentId, final Long id, final ActionItemDTO actionItem);
+    void create(final Long incidentId, final ActionItemDTO actionItem, final String userEmail);
+    ActionItemResponseDTO update(final Long incidentId, final Long id, final ActionItemDTO actionItem, final String userEmail);
     void delete(final Long incidentId, final Long id);
 }

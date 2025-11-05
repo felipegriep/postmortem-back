@@ -6,6 +6,7 @@ import com.griep.postmortem.domain.enums.ActionTypeEnum;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 
@@ -14,5 +15,6 @@ public record ActionItemDTO(
         @NotNull String description,
         @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone = "America/Sao_Paulo") LocalDateTime dueDate,
         @Enumerated(EnumType.STRING) @NotNull ActionStatusEnum status,
-        String evidenceLink) {
+        String evidenceLink,
+        @Positive Long ownerId) {
 }
