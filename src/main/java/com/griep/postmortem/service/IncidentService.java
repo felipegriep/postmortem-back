@@ -11,9 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.stream.Collectors;
 
 import static com.griep.postmortem.domain.util.IncidentMapper.toDTOWithMttaAndMttrAndScore;
 import static com.griep.postmortem.domain.util.IncidentMapper.toEntity;
@@ -38,26 +41,15 @@ public class IncidentService implements IIncidentService {
                                           final StatusEnum status,
                                           final Pageable pageable) {
 
-        var page = repository.findAll(filter(service, severity, status), pageable);
-        return page.map(incident ->
-                toDTOWithMttaAndMttrAndScore(
+        var page = repository.findAllWithReporter(service, severity, status, pageable);
+        var content = page.getContent()
+                .parallelStream()
+                .map(incident -> toDTOWithMttaAndMttrAndScore(
                         incident,
                         metricsService.calculateMtta(incident.getId(), incident.getStartedAt()),
-                        scoreService.compute(incident).score()
-                )
-        );
-    }
-
-    private Example<Incident> filter(final String service, final SeverityEnum severity, final StatusEnum status) {
-        return of(Incident.builder()
-                        .service(service)
-                        .severity(severity)
-                        .status(status)
-                        .build(),
-                matching()
-                        .withIgnoreCase()
-                        .withMatcher("service", contains())
-        );
+                        scoreService.compute(incident).score()))
+                .collect(Collectors.toList());
+        return new PageImpl<>(content, pageable, page.getTotalElements());
     }
 
     @Override

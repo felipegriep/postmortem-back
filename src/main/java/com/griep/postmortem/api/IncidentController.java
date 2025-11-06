@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -27,6 +26,7 @@ import static org.springframework.data.domain.Sort.Direction.fromString;
 import static org.springframework.data.domain.Sort.by;
 import static org.springframework.http.ResponseEntity.noContent;
 import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequestUri;
 
 @RestController
 @Validated
@@ -81,7 +81,7 @@ public class IncidentController {
     ) {
 
         var id = service.create(incident, userEmail);
-        var location = ServletUriComponentsBuilder.fromCurrentRequestUri()
+        var location = fromCurrentRequestUri()
                 .path("/{id}")
                 .buildAndExpand(id)
                 .toUri();

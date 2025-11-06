@@ -36,7 +36,7 @@ public class PostmortemDoc {
     private LocalDateTime generatedAt;
 
     @Column(name = "COMPLETENESS_SCORE", nullable = false)
-    private Short completenessScore;
+    private Integer completenessScore;
 
     @Column(name = "VERSION", nullable = false)
     @Builder.Default

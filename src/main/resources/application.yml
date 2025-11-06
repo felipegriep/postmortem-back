@@ -24,9 +24,9 @@ spring:
 
 logging:
   level:
-    root: info
+    root: error
     com.griep: debug
-    org.hibernate.SQL: debug
+    org.hibernate.SQL: error
     org.hibernate.type.descriptor.sql.BasicBinder: error
     org.hibernate.orm.jdbc.bind: error
 
