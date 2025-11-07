@@ -25,5 +25,5 @@ public interface IncidentEventRepository extends JpaRepository<IncidentEvent, Lo
 
     long countByIncidentId(final Long incidentId);
     boolean existsByIncidentIdAndType(final Long incidentId, final EventTypeEnum eventType);
-
+    List<IncidentEvent> findByIncidentIdInOrderByEventAtAsc(final List<Long> incidentsIds);
 }

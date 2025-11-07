@@ -34,4 +34,5 @@ public interface ActionItemRepository extends JpaRepository<ActionItem, Long> {
             final ActionTypeEnum actionType);
 
     List<ActionItem> findByIncidentIdOrderByDueDateAscIdAsc(final Long incidentId);
+    List<ActionItem> findByIncidentIdIn(final List<Long> incidentsIds);
 }

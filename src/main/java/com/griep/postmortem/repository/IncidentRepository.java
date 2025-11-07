@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Repository
 public interface IncidentRepository extends JpaRepository<Incident, Long> {
     @Query("SELECT DISTINCT i FROM Incident i LEFT JOIN FETCH i.reporter WHERE " +
@@ -19,4 +22,7 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
                                        final SeverityEnum severity,
                                        final StatusEnum status,
                                        final Pageable pageable);
+
+    List<Incident> findByEndedAtBetweenOrderByEndedAtAsc(final LocalDateTime start, final LocalDateTime end);
+    List<Incident> findByStartedAtBetweenOrderByStartedAtAsc(final LocalDateTime start, final LocalDateTime end);
 }
