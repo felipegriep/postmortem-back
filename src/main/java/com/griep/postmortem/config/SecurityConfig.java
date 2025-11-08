@@ -60,7 +60,7 @@ public class SecurityConfig {
         // Headers typically used by frontend apps
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Origin", "Accept"));
         // Expose Authorization so the client can read JWT if needed
-        config.setExposedHeaders(List.of("Authorization"));
+        config.setExposedHeaders(List.of("Authorization", "Location"));
         // Allow cookies/authorization headers to be sent
         config.setAllowCredentials(true);
 

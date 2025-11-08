@@ -3,7 +3,8 @@ package com.griep.postmortem.api;
 import com.griep.postmortem.domain.dto.response.PostmortemDocResponseDTO;
 import com.griep.postmortem.domain.enums.DocDispositionEnum;
 import com.griep.postmortem.domain.enums.DocFormatEnum;
-import com.griep.postmortem.service.IDocumentService;
+import com.griep.postmortem.service.DocumentService;
+import com.griep.postmortem.service.IPostmortemDocService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.griep.postmortem.domain.enums.DocDispositionEnum.valueOf;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.ResponseEntity.created;
@@ -29,7 +31,8 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @Validated
 public class PostmortemDocController {
 
-    private final IDocumentService service;
+    private final IPostmortemDocService service;
+    private final DocumentService documentService;
 
     @Operation(summary = "List Postmortem Docs of Incident", description = "List versions of postmortem docs of incident")
     @ApiResponses(value = {
@@ -52,7 +55,9 @@ public class PostmortemDocController {
     @GetMapping(
             value = "/{version}",
             produces = {
-                    "text/markdown; charset=UTF-8"
+                    "text/markdown; charset=UTF-8",
+                    "text/html; charset=UTF-8",
+                    "application/pdf"
             })
     public ResponseEntity<byte[]> get(
             @PathVariable @Valid @NotNull @Positive final Long incidentId,
@@ -62,10 +67,12 @@ public class PostmortemDocController {
     ) {
         var content = service.get(incidentId, version);
 
+        content = documentService.convert(content, format);
+
         return fileResponse(
                 content,
                 format,
-                filename(incidentId, version, format.getExtension()),
+                documentService.filename(incidentId, version, format),
                 disposition);
     }
 
@@ -75,12 +82,8 @@ public class PostmortemDocController {
                                                 final DocDispositionEnum disposition) {
         return ResponseEntity.ok()
                 .header(CONTENT_TYPE, format.getMimeType())
-                .header(CONTENT_DISPOSITION, (DocDispositionEnum.valueOf(disposition)) + "; filename=\"" + name + "\"")
+                .header(CONTENT_DISPOSITION, (valueOf(disposition)) + "; filename=\"" + name + "\"")
                 .body(content);
-    }
-
-    private String filename(final Long incidentId, final Integer version, final String extension) {
-        return "postmortem-%d-v%d%s".formatted(incidentId, version, extension);
     }
 
     @Operation(summary = "Postmortem Doc of Incident", description = "Generate a new version of postmortem doc of incident")

@@ -1,288 +1,77 @@
 package com.griep.postmortem.service;
 
-import com.griep.postmortem.domain.dto.response.PostmortemDocResponseDTO;
-import com.griep.postmortem.domain.dto.response.ScoreDTO;
-import com.griep.postmortem.domain.model.*;
-import com.griep.postmortem.domain.util.PostmortemDocMapper;
-import com.griep.postmortem.infra.exception.NotFoundException;
-import com.griep.postmortem.repository.ActionItemRepository;
-import com.griep.postmortem.repository.IncidentEventRepository;
-import com.griep.postmortem.repository.PostmortemDocRepository;
-import com.griep.postmortem.repository.RootCauseRepository;
-import com.griep.postmortem.service.util.Metrics;
+import com.griep.postmortem.domain.enums.DocFormatEnum;
+import com.griep.postmortem.infra.exception.BadGatewayException;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.util.List;
-
-import static com.griep.postmortem.domain.enums.ActionTypeEnum.CORRECTIVE;
-import static com.griep.postmortem.domain.enums.ActionTypeEnum.PREVENTIVE;
-import static com.griep.postmortem.domain.enums.EventTypeEnum.*;
-import static com.griep.postmortem.domain.util.PostmortemDocMapper.toDTO;
-import static com.griep.postmortem.service.util.DocUtils.*;
-import static java.time.Duration.between;
-import static java.time.LocalDateTime.now;
-import static java.time.ZoneId.of;
-import static org.springframework.util.StringUtils.hasText;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
-public class DocumentService implements IDocumentService {
-
-    private final PostmortemDocRepository repository;
-    private final IIncidentService incidentService;
-    private final IncidentEventRepository incidentEventRepository;
-    private final RootCauseRepository rootCauseRepository;
-    private final ActionItemRepository actionItemRepository;
-    private final IScoreService scoreService;
-
-    @Override
-    public Integer create(final Long incidentId) {
-        var incident = incidentService.getEntity(incidentId);
-        var score = scoreService.compute(incident);
-        var version = generateVersion(incidentId);
-
-        var content = generate(incident, version, score);
-
-        save(incident, version, content, score.score());
-
-        return version;
+public class DocumentService {
+    public String filename(final Long incidentId, final Integer version, final DocFormatEnum format) {
+        return "postmortem-%d-v%d%s".formatted(incidentId, version, format.getExtension());
     }
 
-    @Override
-    public List<PostmortemDocResponseDTO> list(final Long incidentId) {
-        return repository.findByIncidentIdOrderByVersionAsc(incidentId)
-                .stream()
-                .map(PostmortemDocMapper::toDTO)
-                .toList();
-    }
-
-    public byte[] get(final Long incidentId, final Integer version) {
-        var doc = toDTO(repository.findByIncidentIdAndVersion(incidentId, version)
-                .orElseThrow(() -> new NotFoundException("Postmortem DOC not found!")));
-        return doc.getMdContent();
-    }
-
-    private Integer generateVersion(final Long incidentId) {
-        var version = repository.findLastVersionForUpdate(incidentId);
-        if (version == null) {
-            version = 1;
-        } else {
-            version++;
-        }
-        return version;
-    }
-
-    private void save(final Incident incident,
-                      final Integer version,
-                      final String content,
-                      final Integer completenessScore) {
-        var postmortemDoc = PostmortemDoc.builder()
-                .incident(incident)
-                .version(version)
-                .mdContent(content)
-                .completenessScore(completenessScore)
-                .generatedAt(now())
-                .build();
-
-        repository.saveAndFlush(postmortemDoc);
-    }
-
-    private String generate(final Incident incident,
-                            final Integer version,
-                            final ScoreDTO score) {
-        var incidentEvents = incidentEventRepository.findByIncidentIdOrderByEventAtAsc(incident.getId());
-        var rootCause = rootCauseRepository.findByIncidentId(incident.getId()).orElse(null);
-        var actionItems = actionItemRepository.findByIncidentIdOrderByDueDateAscIdAsc(incident.getId());
-
-        var metrics = computeMetrics(incident, incidentEvents);
-
-        return renderMarkdown(incident, incidentEvents, rootCause, actionItems, score, metrics, version);
-    }
-
-    private Metrics computeMetrics(final Incident incident, final List<IncidentEvent> incidentEvents) {
-        var first = incidentEvents.stream()
-                .findFirst()
-                .map(IncidentEvent::getEventAt)
-                .orElse(null);
-        var t0 = incident.getStartedAt() != null ?
-                incident.getStartedAt() :
-                first;
-        var tack = incidentEvents.stream()
-                .filter(incidentEvent -> incidentEvent.getType() == DIAGNOSIS)
-                .map(IncidentEvent::getEventAt)
-                .findFirst()
-                .orElseGet(() -> incidentEvents.stream()
-                        .filter(incidentEvent -> incidentEvent.getType() == MITIGATION)
-                        .map(IncidentEvent::getEventAt)
-                        .findFirst()
-                        .orElseGet(() -> incidentEvents.stream()
-                                .filter(incidentEvent -> incidentEvent.getType() == FIX)
-                                .map(IncidentEvent::getEventAt)
-                                .findFirst()
-                                .orElse(null)));
-
-        var tres = incidentEvents.stream()
-                .filter(incidentEvent -> incidentEvent.getType() == FIX)
-                .map(IncidentEvent::getEventAt)
-                .findFirst()
-                .orElse(null);
-
-        Duration mtta = (t0 != null && tack != null) ? between(t0, tack) : null;
-        Duration mttr = (t0 != null && tres != null) ? between(t0, tres) : null;
-        Duration duration = (incident.getStartedAt() != null && incident.getEndedAt() != null)
-                ? between(incident.getStartedAt(), incident.getEndedAt())
-                : null;
-
-        boolean hasComm = incidentEvents.stream()
-                .anyMatch(incidentEvent -> incidentEvent.getType() == COMMUNICATION);
-        return new Metrics(mtta, mttr, duration, hasComm, incidentEvents.size());
-    }
-
-    private String renderMarkdown(final Incident incident,
-                                  final List<IncidentEvent> incidentEvents,
-                                  final RootCause rootCause,
-                                  final List<ActionItem> actionItems,
-                                  final ScoreDTO score,
-                                  final Metrics metrics,
-                                  final Integer version) {
-        var zone = of("America/Sao_Paulo");
-
-        var builder = new StringBuilder();
-        // --- Cabeçalho ---
-        builder.append("# Postmortem - Incidente #")
-                .append(incident.getId())
-                .append(" - Versão ").append(version)
-                .append(": ")
-                .append(safe(incident.getTitle()))
-                .append("\n\n");
-        builder.append("**Severidade:** ")
-                .append(incident.getSeverity())
-                .append(" - **Status:** ")
-                .append(incident.getStatus())
-                .append("  \n");
-        builder.append("**Início:** ")
-                .append(fmtLocal(incident.getStartedAt()))
-                .append(" - **Fim:** ")
-                .append(fmtLocal(incident.getEndedAt()))
-                .append(" - **Duração:** ")
-                .append(fmtDur(metrics.duration()))
-                .append("\n");
-        if (hasText(incident.getImpactShort())) {
-            builder.append("**Impacto (resumo):** ")
-                    .append(safe(incident.getImpactShort()))
-                    .append("\n\n");
-        }
-
-        // --- Métricas + Score ---
-        builder.append("## Métricas\n");
-        builder.append("- **MTTA:** ")
-                .append(fmtDur(metrics.mtta()))
-                .append(" - **MTTR:** ")
-                .append(fmtDur(metrics.mttr()))
-                .append("\n");
-        builder.append("- **Eventos:** ")
-                .append(metrics.eventCount())
-                .append(" - **Houve comunicação?** ")
-                .append(score.checks().hasCommunication() ? "✅" : "❌")
-                .append("\n");
-        builder.append("- **Score:** ")
-                .append(score.score())
-                .append("/100  \n");
-        var breakdown = score.breakdown();
-        builder.append("  - Timeline: ").append(breakdown.timeline()).append("\n")
-                .append("  - Impacto: ").append(breakdown.impact()).append("\n")
-                .append("  - 5 Porquês: ").append(breakdown.whys()).append("\n")
-                .append("  - Causa + Fatores: ").append(breakdown.rootAndFactors()).append("\n")
-                .append("  - Ações: ").append(breakdown.actions()).append("\n")
-                .append("  - Comunicação: ").append(breakdown.communication())
-                .append("\n");
-        var checks = score.checks();
-        builder.append("  - Checks: ").append("\n")
-                .append("   - ")
-                .append(checks.hasMinEvents() ?
-                        "✅ Min. eventos" :
-                        "❌ Min. eventos").append("\n")
-                .append("   - ").append(checks.hasImpact() ?
-                        "✅ Impacto" :
-                        "❌ Impacto").append("\n")
-                .append("   - ").append(checks.hasFiveWhys() ?
-                        "✅ 5 Porquês" :
-                        "❌ 5 Porquês").append("\n")
-                .append("   - ").append(checks.hasRootAndFactors() ?
-                        "✅ Causa + Fatores" :
-                        "❌ Causa + Fatores").append("\n")
-                .append("   - ").append(checks.hasCorrectiveAndPreventiveWithOwnerAndDue() ?
-                        "✅ Ações (corretiva + preventiva)" :
-                        "❌ Ações (corretiva + preventiva)").append("\n")
-                .append("   - ").append(checks.hasCommunication() ?
-                        "✅ Comunicação" :
-                        "❌ Comunicação")
-                .append("\n\n");
-
-        // --- Timeline ---
-        builder.append("## Timeline\n");
-        builder.append("| Quando | Tipo | Ator | Descrição |\n|---|---|---|---|\n");
-        if (incidentEvents.isEmpty()) {
-            builder.append("| — | — | — | Sem eventos registrados |\n\n");
-        } else {
-            incidentEvents.forEach(incidentEvent -> builder.append("| ")
-                    .append(fmtLocal(incidentEvent.getEventAt())).append(" | ")
-                    .append(incidentEvent.getType()).append(" | ")
-                    .append(safe(incidentEvent.getActor().getName())).append(" | ")
-                    .append(safe(incidentEvent.getDescription())).append(" |\n"));
-            builder.append("\n");
-        }
-
-        // --- Análise ---
-        builder.append("## Análise de Causa\n");
-        if (rootCause != null) {
-            builder.append("**5 Porquês**\n");
-            writeWhy(builder, 1, rootCause.getWhy1());
-            writeWhy(builder, 2, rootCause.getWhy2());
-            writeWhy(builder, 3, rootCause.getWhy3());
-            writeWhy(builder, 4, rootCause.getWhy4());
-            writeWhy(builder, 5, rootCause.getWhy5());
-            builder.append("\n");
-            if (hasText(rootCause.getRootCauseText())) {
-                builder.append("**Causa raiz:** ")
-                        .append(safe(rootCause.getRootCauseText()))
-                        .append("\n\n");
+    public byte[] convert(final byte[] mdContent, final DocFormatEnum format) {
+        try {
+            byte[] content;
+            switch (format) {
+                case HTML -> content = convertToHtml(mdContent);
+                case PDF -> content = convertToPdf(convertToHtml(mdContent));
+                default -> content = mdContent;
             }
-            if (hasText(rootCause.getContributingFactors())) {
-                builder.append("**Fatores contribuintes:** ")
-                        .append(safe(rootCause.getContributingFactors()))
-                        .append("\n\n");
-            }
-            if (hasText(rootCause.getLessonsLearned())) {
-                builder.append("**Lições aprendidas:** ")
-                        .append(safe(rootCause.getLessonsLearned()))
-                        .append("\n\n");
-            }
-            builder.append("\n");
-        } else {
-            builder.append("_Sem análise registrada._\n\n");
+
+            return content;
+        } catch (IOException exception) {
+            throw new BadGatewayException("Unable to generate document.");
         }
+    }
 
-        // --- Ações ---
-        var correctives = actionItems.stream()
-                .filter(a -> a.getActionType() == CORRECTIVE).toList();
-        var preventives = actionItems.stream()
-                .filter(a -> a.getActionType() == PREVENTIVE).toList();
-        builder.append("## Ações\n");
-        builder.append("### Corretivas\n");
-        writeActionsTable(builder, correctives, zone);
-        builder.append("### Preventivas\n");
-        writeActionsTable(builder, preventives, zone);
+    private byte[] convertToHtml(final byte[] mdContent) {
+        Parser parser = Parser.builder().build();
+        Node document = parser.parse(new String(mdContent));
+        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        String htmlContent = renderer.render(document);
 
-        builder.append("\n\n");
-        builder.append("---\n");
-        builder.append("Documento gerado em ").append(fmtLocal(now()));
+        String builder = "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head>\n" +
+                "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&amp;display=swap\" />" +
+                "<style>\n" +
+                "body {\n" +
+                "    font-family: 'Exo 2', sans-serif;\n" +
+                "}\n" +
+                "</style>\n" +
+                "<meta charset=\"UTF-8\" />\n" +
+                "</head>\n" +
+                "<body>\n" +
+                htmlContent +
+                "</body>\n" +
+                "</html>";
 
+        return builder.getBytes();
+    }
 
-        return builder.toString();
+    private byte[] convertToPdf(final byte[] htmlContent) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try (os) {
+            // Parse HTML with Jsoup to ensure well-formed XHTML
+            // Document doc = Jsoup.parse(htmlContent, "UTF-8");
+            // doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useFastMode(); // Optional: for faster rendering, may reduce precision
+            builder.withHtmlContent(new String(htmlContent), null); // Pass the parsed HTML content
+            builder.toStream(os);
+            builder.run();
+        }
+        return os.toByteArray();
     }
 }

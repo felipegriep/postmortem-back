@@ -19,7 +19,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.ResponseEntity.status;
 
 @ControllerAdvice
-@Order(0)
+@Order(-1)
 @Slf4j
 public class BadRequestExceptionHandler {
 
