@@ -40,14 +40,4 @@ public class IncidentResponseDTO {
     private Integer mttaMinutes;
     private Integer mttrMinutes;
     private Integer completenessScore;
-
-    public IncidentResponseDTO calculateMttr() {
-        if (this.startedAt == null || this.endedAt == null) {
-            return this;
-        }
-
-        var minutes = between(this.startedAt, this.endedAt).toMinutes();
-        this.mttrMinutes = minutes >= 0 ? (int) minutes : null;
-        return this;
-    }
 }

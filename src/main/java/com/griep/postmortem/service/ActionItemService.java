@@ -65,7 +65,7 @@ public class ActionItemService implements IActionItemService {
             userAccount = userAccountService.getUserAccount(actionItem.ownerId());
         }
 
-        validateDueDate(actionItem.dueDate());
+        validateDueDate(incident.getStartedAt(), actionItem.dueDate());
 
         var recorder = toEntity(incident, new ActionItem(), actionItem, userAccount);
 
@@ -84,16 +84,16 @@ public class ActionItemService implements IActionItemService {
 
         recorder = toEntity(incident, recorder, actionItem, userAccount);
 
-        validateDueDate(recorder.getDueDate());
+        validateDueDate(incident.getStartedAt(), recorder.getDueDate());
 
         recorder = repository.saveAndFlush(recorder);
 
         return toDTO(recorder);
     }
 
-    private static void validateDueDate(final LocalDateTime dueDate) {
-        if (now().isAfter(dueDate)) {
-            throw new BusinessValidationException("Due date must be in the future");
+    private static void validateDueDate(final LocalDateTime startedAt, final LocalDateTime dueDate) {
+        if (startedAt.plusMinutes(15L).isAfter(dueDate)) {
+            throw new BusinessValidationException("Due date must be after 15 minutes after incident start");
         }
     }
 

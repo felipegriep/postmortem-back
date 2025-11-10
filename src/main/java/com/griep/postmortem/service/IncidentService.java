@@ -46,7 +46,7 @@ public class IncidentService implements IIncidentService {
                 .parallelStream()
                 .map(incident -> toDTOWithMttaAndMttrAndScore(
                         incident,
-                        metricsService.calculateMtta(incident.getId(), incident.getStartedAt()),
+                        metricsService.calculateMttaAndMttr(incident.getId(), incident.getStartedAt()),
                         scoreService.compute(incident).score()))
                 .collect(Collectors.toList());
         return new PageImpl<>(content, pageable, page.getTotalElements());
@@ -57,7 +57,7 @@ public class IncidentService implements IIncidentService {
     public IncidentResponseDTO get(final Long id) {
         var incident = getEntity(id);
         return toDTOWithMttaAndMttrAndScore(incident, metricsService
-                        .calculateMtta(id, incident.getStartedAt()),
+                        .calculateMttaAndMttr(id, incident.getStartedAt()),
                 scoreService.compute(incident).score());
     }
 
@@ -90,7 +90,7 @@ public class IncidentService implements IIncidentService {
 
         return toDTOWithMttaAndMttrAndScore(
                 recorder,
-                metricsService.calculateMtta(id, recorder.getStartedAt()),
+                metricsService.calculateMttaAndMttr(id, recorder.getStartedAt()),
                 scoreService.compute(recorder).score());
     }
 

@@ -1,7 +1,8 @@
 package com.griep.postmortem.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 public interface IIncidentMetricsService {
-    Integer calculateMtta(final Long incidentId, final LocalDateTime startAt);
+    Duration[] calculateMttaAndMttr(final Long incidentId, final LocalDateTime startedAt);
 }

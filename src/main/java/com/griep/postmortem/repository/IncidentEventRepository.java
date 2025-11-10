@@ -13,13 +13,6 @@ import java.util.Optional;
 
 @Repository
 public interface IncidentEventRepository extends JpaRepository<IncidentEvent, Long> {
-
-    @Query("SELECT MIN(e.eventAt) " +
-            "FROM IncidentEvent e " +
-            "WHERE e.incident.id = :incidentId " +
-            "AND e.type = com.griep.postmortem.domain.enums.EventTypeEnum.ALERT")
-    Optional<Instant> firstAlertAt(@Param("incidentId") final Long incidentId);
-
     List<IncidentEvent> findByIncidentIdOrderByEventAtAsc(final Long incidentId);
     Optional<IncidentEvent> findByIdAndIncidentId(final Long id, final Long incidentId);
 

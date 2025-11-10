@@ -34,6 +34,7 @@ public class PostmortemDocService implements IPostmortemDocService {
 
     private final PostmortemDocRepository repository;
     private final IIncidentService incidentService;
+    private final IIncidentMetricsService metricsService;
     private final IncidentEventRepository incidentEventRepository;
     private final RootCauseRepository rootCauseRepository;
     private final ActionItemRepository actionItemRepository;
@@ -104,35 +105,10 @@ public class PostmortemDocService implements IPostmortemDocService {
     }
 
     private Metrics computeMetrics(final Incident incident, final List<IncidentEvent> incidentEvents) {
-        var first = incidentEvents.stream()
-                .findFirst()
-                .map(IncidentEvent::getEventAt)
-                .orElse(null);
-        var t0 = incident.getStartedAt() != null ?
-                incident.getStartedAt() :
-                first;
-        var tack = incidentEvents.stream()
-                .filter(incidentEvent -> incidentEvent.getType() == DIAGNOSIS)
-                .map(IncidentEvent::getEventAt)
-                .findFirst()
-                .orElseGet(() -> incidentEvents.stream()
-                        .filter(incidentEvent -> incidentEvent.getType() == MITIGATION)
-                        .map(IncidentEvent::getEventAt)
-                        .findFirst()
-                        .orElseGet(() -> incidentEvents.stream()
-                                .filter(incidentEvent -> incidentEvent.getType() == FIX)
-                                .map(IncidentEvent::getEventAt)
-                                .findFirst()
-                                .orElse(null)));
+        Duration[] mttaAndMttr = metricsService.calculateMttaAndMttr(incident.getId(), incident.getStartedAt());
 
-        var tres = incidentEvents.stream()
-                .filter(incidentEvent -> incidentEvent.getType() == FIX)
-                .map(IncidentEvent::getEventAt)
-                .findFirst()
-                .orElse(null);
-
-        Duration mtta = (t0 != null && tack != null) ? between(t0, tack) : null;
-        Duration mttr = (t0 != null && tres != null) ? between(t0, tres) : null;
+        Duration mtta = mttaAndMttr[0];
+        Duration mttr = mttaAndMttr[1];
         Duration duration = (incident.getStartedAt() != null && incident.getEndedAt() != null)
                 ? between(incident.getStartedAt(), incident.getEndedAt())
                 : null;
@@ -160,9 +136,9 @@ public class PostmortemDocService implements IPostmortemDocService {
                 .append(safe(incident.getTitle()))
                 .append("\n\n");
         builder.append("**Severidade:** ")
-                .append(incident.getSeverity())
+                .append(incident.getSeverity().getDescription())
                 .append(" - **Status:** ")
-                .append(incident.getStatus())
+                .append(incident.getStatus().getDescription())
                 .append("  \n");
         builder.append("**Início:** ")
                 .append(fmtLocal(incident.getStartedAt()))
@@ -231,7 +207,7 @@ public class PostmortemDocService implements IPostmortemDocService {
         } else {
             incidentEvents.forEach(incidentEvent -> builder.append("| ")
                     .append(fmtLocal(incidentEvent.getEventAt())).append(" | ")
-                    .append(incidentEvent.getType()).append(" | ")
+                    .append(incidentEvent.getType().getDescription()).append(" | ")
                     .append(safe(incidentEvent.getActor().getName())).append(" | ")
                     .append(safe(incidentEvent.getDescription())).append(" |\n"));
             builder.append("\n");

@@ -44,7 +44,7 @@ public class DocUtils {
             builder.append("| ").append(desc)
                     .append(" | ").append(safe(action.getOwner() != null ? action.getOwner().getName() : "—"))
                     .append(" | ").append(dueLocal)
-                    .append(" | ").append(action.getStatus())
+                    .append(" | ").append(action.getStatus().getDescription())
                     .append(" | ").append(closedLocal != null ? closedLocal : "—")
                     .append(" | ").append(sla).append(" |\n");
         }

@@ -6,6 +6,8 @@ import com.griep.postmortem.domain.model.Incident;
 import com.griep.postmortem.domain.model.UserAccount;
 import org.modelmapper.ModelMapper;
 
+import java.time.Duration;
+
 public class IncidentMapper {
 
     private final static ModelMapper mapper;
@@ -14,15 +16,19 @@ public class IncidentMapper {
         mapper = new ModelMapper();
     }
 
-    public static IncidentResponseDTO toDTOWithMttaAndMttrAndScore(final Incident incident, final Integer mttaMinutes, final Integer score) {
+    public static IncidentResponseDTO toDTOWithMttaAndMttrAndScore(final Incident incident,
+                                                                   final Duration[] mttaMttrMinutes,
+                                                                   final Integer score) {
         return mapper.map(incident, IncidentResponseDTO.class).toBuilder()
-                .mttaMinutes(mttaMinutes)
+                .mttaMinutes(mttaMttrMinutes[0] == null ? null : (int) mttaMttrMinutes[0].toMinutes())
+                .mttrMinutes(mttaMttrMinutes[1] == null ? null : (int) mttaMttrMinutes[1].toMinutes())
                 .completenessScore(score)
-                .build()
-                .calculateMttr();
+                .build();
     }
 
-    public static Incident toEntity(final Incident incident, final IncidentDTO dto, final UserAccount userAccount) {
+    public static Incident toEntity(final Incident incident,
+                                    final IncidentDTO dto,
+                                    final UserAccount userAccount) {
         return incident.toBuilder()
                 .title(dto.getTitle())
                 .service(dto.getService())
