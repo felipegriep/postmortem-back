@@ -30,7 +30,7 @@ public class DocUtils {
                                    final ZoneId zone) {
         builder.append("| Descrição | Owner | Due (local) | Status | Fechada em | SLA |\n|---|---|---|---|---|---|\n");
         if (actionItems.isEmpty()) {
-            builder.append("| — | — | — | — | — | — |\n\n");
+            builder.append("| - | - | - | - | - | - |\n\n");
             return;
         }
         for (var action : actionItems) {
@@ -42,10 +42,10 @@ public class DocUtils {
                 desc += " [" + "evidência" + "](" + action.getEvidenceLink().trim() + ")";
             }
             builder.append("| ").append(desc)
-                    .append(" | ").append(safe(action.getOwner() != null ? action.getOwner().getName() : "—"))
+                    .append(" | ").append(safe(action.getOwner() != null ? action.getOwner().getName() : "-"))
                     .append(" | ").append(dueLocal)
                     .append(" | ").append(action.getStatus().getDescription())
-                    .append(" | ").append(closedLocal != null ? closedLocal : "—")
+                    .append(" | ").append(closedLocal != null ? closedLocal : "-")
                     .append(" | ").append(sla).append(" |\n");
         }
         builder.append("\n");
@@ -61,7 +61,7 @@ public class DocUtils {
         if (actionItem.getDueDate() != null && now(of("America/Sao_Paulo")).toLocalDateTime().isAfter(actionItem.getDueDate())) {
             return "*Atrasada ●*";
         }
-        return "—";
+        return "-";
     }
 
     public static String fmtLocal(final LocalDateTime dateTime) {
@@ -72,12 +72,12 @@ public class DocUtils {
     }
 
     public static String fmtLocal(final Instant ts, final ZoneId zone) {
-        if (ts == null) return "—";
+        if (ts == null) return "-";
         return ts.atZone(zone).format(ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     public static String fmtDur(final Duration duration) {
-        return duration == null ? "—" : humanize(duration);
+        return duration == null ? "-" : humanize(duration);
     }
 
     private static String humanize(final Duration duration) {
@@ -88,25 +88,11 @@ public class DocUtils {
         return rm == 0 ? h + "h" : h + "h" + rm + "m";
     }
 
-//    private static boolean hasText(final String string) {
-//        return string != null && !string.isBlank();
-//    }
-//
-//    private String truncate(final String string, final int number) {
-//        return string != null &&
-//                string.length() > number ?
-//                string.substring(0, number - 1) + "…" :
-//                string;
-//    }
-
     public static String safe(String string) {
         if (string == null) {
-            return "—";
+            return "-";
         }
-        // escape básico para tabelas e markdown
-        return string.replace("|", "\\|")
-                .replace("*", "\\*")
-                .replace("_", "\\_")
-                .replace("`", "\\`");
+
+        return string;
     }
 }

@@ -25,8 +25,8 @@ public class IncidentEventMapper {
                                          final UserAccount userAccount) {
         return incidentEvent.toBuilder()
                 .incident(incident)
-                .eventAt(incidentEvent.getId() == null ? dto.getEventAt() : incidentEvent.getEventAt())
-                .type(incidentEvent.getId() == null ? dto.getType() : incidentEvent.getType())
+                .eventAt(dto.getEventAt())
+                .type(dto.getType())
                 .description(dto.getDescription())
                 .actor(userAccount)
                 .build();
