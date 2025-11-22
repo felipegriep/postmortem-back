@@ -21,7 +21,7 @@ public class DocUtils {
 
     public static void writeWhy(final StringBuilder builder, final int number, final String text) {
         if (hasText(text)) {
-            builder.append(number).append(". ").append(safe(text)).append("\n");
+            builder.append("     ").append(number).append(". ").append(safe(text)).append("\n");
         }
     }
 
@@ -66,13 +66,15 @@ public class DocUtils {
 
     public static String fmtLocal(final LocalDateTime dateTime) {
         if (dateTime == null) {
-            return null;
+            return "-";
         }
         return dateTime.format(ofPattern("dd-MM-yyyy HH:mm:ss"));
     }
 
     public static String fmtLocal(final Instant ts, final ZoneId zone) {
-        if (ts == null) return "-";
+        if (ts == null) {
+            return "-";
+        }
         return ts.atZone(zone).format(ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
@@ -93,6 +95,7 @@ public class DocUtils {
             return "-";
         }
 
-        return string;
+        // escape básico para tabelas e markdown
+        return string.replace("-", "     -");
     }
 }

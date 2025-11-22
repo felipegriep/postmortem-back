@@ -40,21 +40,42 @@ public class IncidentMetricsService implements IIncidentMetricsService {
     }
 
     private Duration calculateMtta(final Collection<IncidentEvent> incidentEvents, final LocalDateTime t0) {
+
+        var tAlert = incidentEvents.stream()
+                .filter(incidentEvent -> incidentEvent.getType() == ALERT)
+                .map(IncidentEvent::getEventAt)
+                .findFirst()
+                .orElse(null);
+
+        LocalDateTime tReference;
+
+        if (tAlert != null && t0 != null && tAlert.isAfter(t0)) {
+            tReference = tAlert;
+        } else {
+            tReference = t0;
+        }
+
         var tAck = incidentEvents.stream()
-                .filter(incidentEvent -> incidentEvent.getType() == DIAGNOSIS)
+                .filter(incidentEvent ->
+                        incidentEvent.getType() == DIAGNOSIS &&
+                                !incidentEvent.getEventAt().isBefore(tReference))
                 .map(IncidentEvent::getEventAt)
                 .findFirst()
                 .orElseGet(() -> incidentEvents.stream()
-                        .filter(incidentEvent -> incidentEvent.getType() == MITIGATION)
+                        .filter(incidentEvent ->
+                                incidentEvent.getType() == MITIGATION &&
+                                        !incidentEvent.getEventAt().isBefore(tReference))
                         .map(IncidentEvent::getEventAt)
                         .findFirst()
                         .orElseGet(() -> incidentEvents.stream()
-                                .filter(incidentEvent -> incidentEvent.getType() == FIX)
+                                .filter(incidentEvent ->
+                                        incidentEvent.getType() == FIX &&
+                                                !incidentEvent.getEventAt().isBefore(tReference))
                                 .map(IncidentEvent::getEventAt)
                                 .findFirst()
                                 .orElse(null)));
 
-        return (t0 != null && tAck != null) ? between(t0, tAck) : null;
+        return (tReference != null && tAck != null) ? between(tReference, tAck) : null;
     }
 
     private Duration calculateMttr(final Collection<IncidentEvent> incidentEvents, final LocalDateTime t0) {

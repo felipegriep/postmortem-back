@@ -32,6 +32,12 @@ import static org.springframework.util.StringUtils.hasText;
 @Transactional
 public class PostmortemDocService implements IPostmortemDocService {
 
+    private static final String IMPACTO = "Impacto";
+    private static final String PORQUES = "5 Porquês";
+    private static final String CAUSA_FATORES = "Causa + Fatores";
+    private static final String COMUNICACAO = "Comunicação";
+    private static final String ACOES = "Ações";
+
     private final PostmortemDocRepository repository;
     private final IIncidentService incidentService;
     private final IIncidentMetricsService metricsService;
@@ -135,22 +141,21 @@ public class PostmortemDocService implements IPostmortemDocService {
                 .append(": ")
                 .append(safe(incident.getTitle()))
                 .append("\n\n");
-        builder.append("**Severidade:** ")
-                .append(incident.getSeverity().getDescription())
-                .append(" - **Status:** ")
-                .append(incident.getStatus().getDescription())
-                .append("  \n");
-        builder.append("**Início:** ")
-                .append(fmtLocal(incident.getStartedAt()))
-                .append(" - **Fim:** ")
-                .append(fmtLocal(incident.getEndedAt()))
-                .append(" - **Duração:** ")
-                .append(fmtDur(metrics.duration()))
-                .append("\n");
+        builder.append("- **Severidade:** ")
+                .append(incident.getSeverity().getDescription()).append("\n");
+        builder.append("- **Status:** ")
+                .append(incident.getStatus().getDescription()).append("\n");
+        builder.append("- **Início:** ")
+                .append(fmtLocal(incident.getStartedAt())).append("\n");
+        builder.append("- **Fim:** ")
+                .append(fmtLocal(incident.getEndedAt())).append("\n");
+        builder.append("- **Duração:** ")
+                .append(fmtDur(metrics.duration())).append("\n");
+        builder.append("---\n");
         if (hasText(incident.getImpactShort())) {
-            builder.append("**Impacto (resumo):** ")
-                    .append(safe(incident.getImpactShort()))
-                    .append("\n\n");
+            builder.append("- **" + IMPACTO + " (resumo):** ").append("\n");
+            builder.append(safe(incident.getImpactShort())).append("\n\n");
+            builder.append("---\n");
         }
 
         // --- Métricas + Score ---
@@ -170,40 +175,42 @@ public class PostmortemDocService implements IPostmortemDocService {
                 .append("/100  \n");
         var breakdown = score.breakdown();
         builder.append("  - Timeline: ").append(breakdown.timeline()).append("\n")
-                .append("  - Impacto: ").append(breakdown.impact()).append("\n")
-                .append("  - 5 Porquês: ").append(breakdown.whys()).append("\n")
-                .append("  - Causa + Fatores: ").append(breakdown.rootAndFactors()).append("\n")
-                .append("  - Ações: ").append(breakdown.actions()).append("\n")
-                .append("  - Comunicação: ").append(breakdown.communication())
+                .append("  - " + IMPACTO + ": ").append(breakdown.impact()).append("\n")
+                .append("  - " + PORQUES + ": ").append(breakdown.whys()).append("\n")
+                .append("  - " + CAUSA_FATORES + ": ").append(breakdown.rootAndFactors()).append("\n")
+                .append("  - " + ACOES + ": ").append(breakdown.actions()).append("\n")
+                .append("  - " + COMUNICACAO + ": ").append(breakdown.communication())
                 .append("\n");
         var checks = score.checks();
         builder.append("  - Checks: ").append("\n")
-                .append("   - ")
+                .append("     - ")
                 .append(checks.hasMinEvents() ?
-                        "✅ Min. eventos" :
-                        "❌ Min. eventos").append("\n")
-                .append("   - ").append(checks.hasImpact() ?
-                        "✅ Impacto" :
-                        "❌ Impacto").append("\n")
-                .append("   - ").append(checks.hasFiveWhys() ?
-                        "✅ 5 Porquês" :
-                        "❌ 5 Porquês").append("\n")
-                .append("   - ").append(checks.hasRootAndFactors() ?
-                        "✅ Causa + Fatores" :
-                        "❌ Causa + Fatores").append("\n")
-                .append("   - ").append(checks.hasCorrectiveAndPreventiveWithOwnerAndDue() ?
-                        "✅ Ações (corretiva + preventiva)" :
-                        "❌ Ações (corretiva + preventiva)").append("\n")
-                .append("   - ").append(checks.hasCommunication() ?
-                        "✅ Comunicação" :
-                        "❌ Comunicação")
+                        "✅ " :
+                        "❌ ").append("Min. eventos\n")
+                .append("     - ").append(checks.hasImpact() ?
+                        "✅ " :
+                        "❌ ").append(IMPACTO + "\n")
+                .append("     - ").append(checks.hasFiveWhys() ?
+                        "✅ " :
+                        "❌ ").append(PORQUES + "\n")
+                .append("     - ").append(checks.hasRootAndFactors() ?
+                        "✅ " :
+                        "❌ ").append(CAUSA_FATORES + "\n")
+                .append("     - ").append(checks.hasCorrectiveAndPreventiveWithOwnerAndDue() ?
+                        "✅ " :
+                        "❌ ").append(ACOES + " (corretiva + preventiva)\n")
+                .append("     - ").append(checks.hasCommunication() ?
+                        "✅ " :
+                        "❌ ").append(COMUNICACAO)
                 .append("\n\n");
+
+        builder.append("---\n");
 
         // --- Timeline ---
         builder.append("## Timeline\n");
         builder.append("| Quando | Tipo | Ator | Descrição |\n|---|---|---|---|\n");
         if (incidentEvents.isEmpty()) {
-            builder.append("| — | — | — | Sem eventos registrados |\n\n");
+            builder.append("| - | - | - | Sem eventos registrados |\n\n");
         } else {
             incidentEvents.forEach(incidentEvent -> builder.append("| ")
                     .append(fmtLocal(incidentEvent.getEventAt())).append(" | ")
@@ -213,10 +220,12 @@ public class PostmortemDocService implements IPostmortemDocService {
             builder.append("\n");
         }
 
+        builder.append("---\n");
+
         // --- Análise ---
         builder.append("## Análise de Causa\n");
         if (rootCause != null) {
-            builder.append("**5 Porquês**\n");
+            builder.append("- **" + PORQUES + "**\n");
             writeWhy(builder, 1, rootCause.getWhy1());
             writeWhy(builder, 2, rootCause.getWhy2());
             writeWhy(builder, 3, rootCause.getWhy3());
@@ -224,17 +233,17 @@ public class PostmortemDocService implements IPostmortemDocService {
             writeWhy(builder, 5, rootCause.getWhy5());
             builder.append("\n");
             if (hasText(rootCause.getRootCauseText())) {
-                builder.append("**Causa raiz:** ")
+                builder.append("- **Causa raiz:** ").append("\n")
                         .append(safe(rootCause.getRootCauseText()))
                         .append("\n\n");
             }
             if (hasText(rootCause.getContributingFactors())) {
-                builder.append("**Fatores contribuintes:** ")
+                builder.append("- **Fatores contribuintes:** ").append("\n")
                         .append(safe(rootCause.getContributingFactors()))
                         .append("\n\n");
             }
             if (hasText(rootCause.getLessonsLearned())) {
-                builder.append("**Lições aprendidas:** ")
+                builder.append("- **Lições aprendidas:** ").append("\n")
                         .append(safe(rootCause.getLessonsLearned()))
                         .append("\n\n");
             }
@@ -243,12 +252,14 @@ public class PostmortemDocService implements IPostmortemDocService {
             builder.append("_Sem análise registrada._\n\n");
         }
 
+        builder.append("---\n");
+
         // --- Ações ---
         var correctives = actionItems.stream()
                 .filter(a -> a.getActionType() == CORRECTIVE).toList();
         var preventives = actionItems.stream()
                 .filter(a -> a.getActionType() == PREVENTIVE).toList();
-        builder.append("## Ações\n");
+        builder.append("## " + ACOES + "\n");
         builder.append("### Corretivas\n");
         writeActionsTable(builder, correctives, zone);
         builder.append("### Preventivas\n");
