@@ -3,13 +3,19 @@ springdoc:
     path: /openapi-ui
   api-docs:
     path: /api-docs-custom
+
+server:
+  port: 8081
 spring:
   application:
     name: postmortem-back
 
+  jpa:
+    open-in-view: false
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://postmortem-db.mysql.database.azure.com:3306/sys?useSSL=true
+    url: jdbc:mysql://postmortem-db.mysql.database.azure.com:3306/postmortem?useSSL=true
     username: fgriep
     password: postmortem#123
     hikari:
@@ -18,5 +24,13 @@ spring:
 
 logging:
   level:
-    root: info
+    root: error
     com.griep: debug
+    org.hibernate.SQL: error
+    org.hibernate.type.descriptor.sql.BasicBinder: error
+    org.hibernate.orm.jdbc.bind: error
+
+jwt:
+  google:
+    key: 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
+    expiration: 160000
